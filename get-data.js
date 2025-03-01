@@ -1,3 +1,5 @@
+/* 2025 Copyright Veer Gosai (veergosai.com) */
+
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const axios = require('axios');

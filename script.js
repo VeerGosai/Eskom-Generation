@@ -1,16 +1,13 @@
-// URLs to your CSV files
+// 2025 Copyright Veer Gosai (veergosai.com) 
+
 const csvUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/output.csv';
 const labelUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/label.csv';
 
-// Global variables
 let csvData = [];
 let headers = [];
 let labelMap = {};
 let chart;
 
-/**
- * Fetch and parse the main CSV data (output.csv).
- */
 async function fetchCSVData() {
     const response = await fetch(csvUrl);
     const text = await response.text();
@@ -33,9 +30,6 @@ async function fetchCSVData() {
     });
 }
 
-/**
- * Fetch and parse the label CSV (label.csv).
- */
 async function fetchLabels() {
     const response = await fetch(labelUrl);
     const text = await response.text();
@@ -53,12 +47,9 @@ async function fetchLabels() {
     });
 }
 
-/**
- * Populates the dropdown with available series.
- */
 function populateDropdown() {
     const select = document.getElementById('series-select');
-    select.innerHTML = ''; // Clear previous options
+    select.innerHTML = '';
 
     headers.slice(1).forEach((header) => {
         const option = document.createElement('option');
@@ -75,9 +66,6 @@ function populateDropdown() {
     }
 }
 
-/**
- * Renders the selected series on a Chart.js line chart.
- */
 function plotData() {
     if (!csvData.length) return;
 
@@ -101,7 +89,6 @@ function plotData() {
         pointRadius: 2
     };
 
-    // Destroy previous chart instance if any
     if (chart) {
         chart.destroy();
     }
@@ -115,7 +102,7 @@ function plotData() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Prevent chart from stretching
+            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true,
@@ -151,17 +138,11 @@ function plotData() {
     });
 }
 
-/**
- * Returns a default color if none is specified in label.csv.
- */
 function getColor() {
     const colors = ['#007bff', '#dc3545', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#e83e8c', '#fd7e14'];
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
-/**
- * Initialization sequence.
- */
 async function init() {
     await fetchCSVData();
     await fetchLabels();
