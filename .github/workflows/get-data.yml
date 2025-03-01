@@ -2,7 +2,7 @@ name: Get Eskom Energy Data
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # Adjust schedule as needed
+    - cron: '0 */8 * * *'  # Adjust schedule as needed
   workflow_dispatch:
 
 permissions:
