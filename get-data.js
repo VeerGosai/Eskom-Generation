@@ -2,7 +2,10 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'] // Add these flags to disable sandboxing
+  });
   const page = await browser.newPage();
 
   // Store all POST responses for the specified URL
@@ -46,7 +49,7 @@ const fs = require('fs');
       console.log('Largest response saved to output.json');
     }
   } else {
-    console.log('Less than 3 requests found. Exiting...');
+    console.log('Less than 6 requests found. Exiting...');
   }
 
   // Close the browser and stop the script
