@@ -1,1 +1,83 @@
-Hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Data Plot</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #plot {
+            width: 80%;
+            height: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="plot"></div>
+
+    <script>
+        // Load CSV data
+        d3.csv("https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/output.csv").then(function(data) {
+            // Process the data
+            const times = data.map(row => row["Date And Time"]);
+            const nuclearGeneration = data.map(row => parseFloat(row["Nuclear_Generation"]));
+            const eskomOCGTGeneration = data.map(row => parseFloat(row["Eskom_OCGT_Generation"]));
+            const wind = data.map(row => parseFloat(row["Wind"]));
+
+            // Create the trace for the plot
+            const trace1 = {
+                x: times,
+                y: nuclearGeneration,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Nuclear Generation',
+                line: {color: 'blue'}
+            };
+
+            const trace2 = {
+                x: times,
+                y: eskomOCGTGeneration,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Eskom OCGT Generation',
+                line: {color: 'green'}
+            };
+
+            const trace3 = {
+                x: times,
+                y: wind,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Wind Generation',
+                line: {color: 'orange'}
+            };
+
+            // Plotly data
+            const dataToPlot = [trace1, trace2, trace3];
+
+            // Layout configuration
+            const layout = {
+                title: 'Energy Generation Data',
+                xaxis: {title: 'Date and Time', tickangle: -45},
+                yaxis: {title: 'Generation (MW)'},
+                height: 600
+            };
+
+            // Plot the chart
+            Plotly.newPlot('plot', dataToPlot, layout);
+        }).catch(function(error) {
+            console.log(error);
+        });
+    </script>
+</body>
+</html>
