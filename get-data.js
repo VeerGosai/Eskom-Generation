@@ -5,8 +5,13 @@ const path = require('path');
 
 (async () => {
     const url = "https://www.eskom.co.za/dataportal/supply-side/station-build-up-for-the-last-7-days/";
+
+    // Launch Puppeteer with sandbox disabled for GitHub Actions
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     
-    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
     
