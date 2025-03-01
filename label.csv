@@ -1,21 +1,22 @@
-Date_Time_Hour_Beginning,Date/Time (Hour Beginning)
-Thermal_Gen_Excl_Pumping_and_SCO,Thermal Generation (Excl. Pumping & SCO)
-Eskom_OCGT_SCO_Pumping,Eskom OCGT SCO Pumping
-Eskom_Gas_SCO_Pumping,Eskom Gas SCO Pumping
-Hydro_Water_SCO_Pumping,Hydro Water SCO Pumping
-Pumped_Water_SCO_Pumping,Pumped Water SCO Pumping
-Thermal_Generation,Thermal Generation
-Nuclear_Generation,Nuclear Generation
-International_Imports,International Imports
-Eskom_OCGT_Generation,Eskom OCGT Generation
-Eskom_Gas_Generation,Eskom Gas Generation
-Dispatchable_IPP_OCGT,Dispatchable IPP OCGT
-Hydro_Water_Generation,Hydro Water Generation
-Pumped_Water_Generation,Pumped Water Generation
-IOS_Excl_ILS_and_MLR,IOS (Excl. ILS & MLR)
-ILS_Usage,ILS Usage
-Manual_Load_Reduction_MLR,Manual Load Reduction (MLR)
-Wind,Wind
-PV,Photovoltaic (PV)
-CSP,Concentrated Solar Power (CSP)
-Other_RE,Other Renewable Energy
+Header,Friendly Label,Category,Color
+Date_Time_Hour_Beginning,Date/Time (Hour Beginning),Time,#000000
+Thermal_Gen_Excl_Pumping_and_SCO,Thermal Generation (Excl. Pumping & SCO),Thermal,#D32F2F
+Eskom_OCGT_SCO_Pumping,Eskom OCGT SCO Pumping,Gas,#FF7043
+Eskom_Gas_SCO_Pumping,Eskom Gas SCO Pumping,Gas,#FF9800
+Hydro_Water_SCO_Pumping,Hydro Water SCO Pumping,Hydro,#26A69A
+Pumped_Water_SCO_Pumping,Pumped Water SCO Pumping,Hydro,#00897B
+Thermal_Generation,Thermal Generation,Coal,#B71C1C
+Nuclear_Generation,Nuclear Generation,Nuclear,#1565C0
+International_Imports,International Imports,Imports,#9E9E9E
+Eskom_OCGT_Generation,Eskom OCGT Generation,Gas,#FF8A65
+Eskom_Gas_Generation,Eskom Gas Generation,Gas,#FFB74D
+Dispatchable_IPP_OCGT,Dispatchable IPP OCGT,Gas,#F57C00
+Hydro_Water_Generation,Hydro Water Generation,Hydro,#009688
+Pumped_Water_Generation,Pumped Water Generation,Hydro,#004D40
+IOS_Excl_ILS_and_MLR,IOS (Excl. ILS & MLR),Misc,#607D8B
+ILS_Usage,ILS Usage,Misc,#78909C
+Manual_Load_Reduction_MLR,Manual Load Reduction (MLR),Load Shedding,#F44336
+Wind,Wind,Renewable,#66BB6A
+PV,Photovoltaic (PV),Solar,#FFEB3B
+CSP,Concentrated Solar Power (CSP),Solar,#FDD835
+Other_RE,Other Renewable Energy,Renewable,#4CAF50

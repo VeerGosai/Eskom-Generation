@@ -4,10 +4,12 @@
 const csvUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/output.csv';
 const labelUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/label.csv';
 
-// Global variables to hold data
+// Global variables
 let csvData = [];
 let headers = [];
-let labelMap = {}; // Will map header -> friendly label
+// labelMap will hold objects like:
+//   labelMap[headerName] = { label: "...", category: "...", color: "..." }
+let labelMap = {};
 let chart; // Chart.js instance
 
 /**
@@ -16,7 +18,7 @@ let chart; // Chart.js instance
 async function fetchCSVData() {
   const response = await fetch(csvUrl);
   const text = await response.text();
-  // Split lines; handle potential CRLF vs LF
+  // Split lines; handle CRLF vs LF
   const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
   // First line is the header row
   headers = lines[0].split(',');
@@ -34,25 +36,29 @@ async function fetchCSVData() {
 
 /**
  * Fetches and parses the label CSV (label.csv),
- * building a dictionary { columnName -> friendlyLabel }.
+ * building a dictionary of { headerName -> { label, category, color } }.
  */
 async function fetchLabels() {
   const response = await fetch(labelUrl);
   const text = await response.text();
   const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
 
-  // Each line is expected to be: "HeaderName,Friendly Label"
+  // Each line is expected to be: "HeaderName,FriendlyLabel,Category,Color"
   lines.forEach(line => {
-    const [key, friendly] = line.split(',');
+    const [key, friendly, category, color] = line.split(',');
     if (key && friendly) {
-      labelMap[key] = friendly;
+      labelMap[key] = {
+        label: friendly.trim(),
+        category: category ? category.trim() : '',
+        color: color ? color.trim() : ''
+      };
     }
   });
 }
 
 /**
  * Populate the dropdown with the available series (columns).
- * Skip the first column, which is the Date/Time.
+ * Skip the first column (Date/Time).
  */
 function populateDropdown() {
   const select = document.getElementById('series-select');
@@ -62,8 +68,9 @@ function populateDropdown() {
   headers.slice(1).forEach(header => {
     const option = document.createElement('option');
     option.value = header;
-    // If we have a friendly label, use it; otherwise fallback
-    option.text = labelMap[header] || header;
+    // If we have a friendly label, use it; otherwise fallback to the raw header
+    const friendlyLabel = labelMap[header]?.label || header;
+    option.text = friendlyLabel;
     select.appendChild(option);
   });
 
@@ -85,13 +92,16 @@ function plotData() {
   // Build arrays for Chart.js
   const xLabels = csvData.map(row => row[timeHeader]);
   const dataPoints = csvData.map(row => parseFloat(row[selectedHeader]));
-  const friendlyLabel = labelMap[selectedHeader] || selectedHeader;
+  
+  // Use the friendly label and color from labelMap, if available
+  const friendlyLabel = labelMap[selectedHeader]?.label || selectedHeader;
+  const lineColor = labelMap[selectedHeader]?.color || getColor(0);
 
   // Prepare the dataset
   const dataset = {
     label: friendlyLabel,
     data: dataPoints,
-    borderColor: getColor(0),
+    borderColor: lineColor,
     fill: false,
     tension: 0.1
   };
@@ -141,7 +151,7 @@ function plotData() {
 }
 
 /**
- * Simple color picker for the dataset line.
+ * Simple color fallback if no color is defined in label.csv.
  */
 function getColor(index) {
   const colors = [
@@ -152,13 +162,13 @@ function getColor(index) {
 }
 
 /**
- * Initialization sequence: fetch data, fetch labels, build UI, plot initial series.
+ * Initialization sequence: fetch data, fetch labels, build UI, plot the first series by default.
  */
 async function init() {
   await fetchCSVData();
   await fetchLabels();
   populateDropdown();
-  plotData(); // Plot the first series by default
+  plotData(); // Plot the first series automatically
 }
 
 // Kick off once DOM is ready
