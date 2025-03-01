@@ -1,5 +1,3 @@
-// script.js
-
 // URLs to your CSV files
 const csvUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/output.csv';
 const labelUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/label.csv';
@@ -7,169 +5,167 @@ const labelUrl = 'https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/m
 // Global variables
 let csvData = [];
 let headers = [];
-// labelMap will hold objects like:
-//   labelMap[headerName] = { label: "...", category: "...", color: "..." }
 let labelMap = {};
-let chart; // Chart.js instance
+let chart;
 
 /**
- * Fetches and parses the main CSV data (output.csv).
+ * Fetch and parse the main CSV data (output.csv).
  */
 async function fetchCSVData() {
-  const response = await fetch(csvUrl);
-  const text = await response.text();
-  // Split lines; handle CRLF vs LF
-  const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-  // First line is the header row
-  headers = lines[0].split(',');
+    const response = await fetch(csvUrl);
+    const text = await response.text();
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
 
-  // Convert subsequent lines to objects
-  csvData = lines.slice(1).map(line => {
-    const values = line.split(',');
-    const obj = {};
-    headers.forEach((header, idx) => {
-      obj[header] = values[idx];
+    if (lines.length < 2) {
+        console.error("CSV data is empty or malformed.");
+        return;
+    }
+
+    headers = lines[0].split(',');
+
+    csvData = lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = {};
+        headers.forEach((header, idx) => {
+            obj[header] = values[idx] ? values[idx].trim() : '';
+        });
+        return obj;
     });
-    return obj;
-  });
 }
 
 /**
- * Fetches and parses the label CSV (label.csv),
- * building a dictionary of { headerName -> { label, category, color } }.
+ * Fetch and parse the label CSV (label.csv).
  */
 async function fetchLabels() {
-  const response = await fetch(labelUrl);
-  const text = await response.text();
-  const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    const response = await fetch(labelUrl);
+    const text = await response.text();
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
 
-  // Each line is expected to be: "HeaderName,FriendlyLabel,Category,Color"
-  lines.forEach(line => {
-    const [key, friendly, category, color] = line.split(',');
-    if (key && friendly) {
-      labelMap[key] = {
-        label: friendly.trim(),
-        category: category ? category.trim() : '',
-        color: color ? color.trim() : ''
-      };
-    }
-  });
+    lines.forEach(line => {
+        const [key, friendly, category, color] = line.split(',');
+        if (key && friendly) {
+            labelMap[key] = {
+                label: friendly.trim(),
+                category: category ? category.trim() : '',
+                color: color ? color.trim() : getColor()
+            };
+        }
+    });
 }
 
 /**
- * Populate the dropdown with the available series (columns).
- * Skip the first column (Date/Time).
+ * Populates the dropdown with available series.
  */
 function populateDropdown() {
-  const select = document.getElementById('series-select');
-  // Clear any existing options
-  select.innerHTML = '';
+    const select = document.getElementById('series-select');
+    select.innerHTML = ''; // Clear previous options
 
-  headers.slice(1).forEach(header => {
-    const option = document.createElement('option');
-    option.value = header;
-    // If we have a friendly label, use it; otherwise fallback to the raw header
-    const friendlyLabel = labelMap[header]?.label || header;
-    option.text = friendlyLabel;
-    select.appendChild(option);
-  });
+    headers.slice(1).forEach((header) => {
+        const option = document.createElement('option');
+        option.value = header;
+        option.text = labelMap[header]?.label || header;
+        select.appendChild(option);
+    });
 
-  // Listen for changes
-  select.addEventListener('change', plotData);
+    select.addEventListener('change', plotData);
+
+    if (select.options.length > 0) {
+        select.selectedIndex = 0;
+        plotData();
+    }
 }
 
 /**
  * Renders the selected series on a Chart.js line chart.
  */
 function plotData() {
-  if (!csvData.length) return;
+    if (!csvData.length) return;
 
-  const select = document.getElementById('series-select');
-  const selectedHeader = select.value;
-  // The first column is our Date/Time
-  const timeHeader = headers[0];
+    const select = document.getElementById('series-select');
+    const selectedHeader = select.value;
+    const timeHeader = headers[0];
 
-  // Build arrays for Chart.js
-  const xLabels = csvData.map(row => row[timeHeader]);
-  const dataPoints = csvData.map(row => parseFloat(row[selectedHeader]));
-  
-  // Use the friendly label and color from labelMap, if available
-  const friendlyLabel = labelMap[selectedHeader]?.label || selectedHeader;
-  const lineColor = labelMap[selectedHeader]?.color || getColor(0);
+    const xLabels = csvData.map(row => new Date(row[timeHeader]));
+    const dataPoints = csvData.map(row => parseFloat(row[selectedHeader]) || 0);
 
-  // Prepare the dataset
-  const dataset = {
-    label: friendlyLabel,
-    data: dataPoints,
-    borderColor: lineColor,
-    fill: false,
-    tension: 0.1
-  };
+    const friendlyLabel = labelMap[selectedHeader]?.label || selectedHeader;
+    const lineColor = labelMap[selectedHeader]?.color || getColor();
 
-  // Destroy previous chart instance if any
-  if (chart) {
-    chart.destroy();
-  }
+    const dataset = {
+        label: friendlyLabel,
+        data: dataPoints,
+        borderColor: lineColor,
+        backgroundColor: lineColor + '33', 
+        fill: true,
+        tension: 0.4, 
+        pointRadius: 2
+    };
 
-  // Create a new chart
-  const ctx = document.getElementById('chart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: xLabels,
-      datasets: [dataset]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        title: {
-          display: true,
-          text: 'Energy Plot'
-        }
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: {
-            parser: 'YYYY-MM-DD HH:mm:ss',
-            tooltipFormat: 'lll' // e.g. "Feb 21, 2025 12:00 AM"
-          },
-          title: {
-            display: true,
-            text: 'Date/Time'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Value'
-          }
-        }
-      }
+    // Destroy previous chart instance if any
+    if (chart) {
+        chart.destroy();
     }
-  });
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: xLabels,
+            datasets: [dataset]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Prevent chart from stretching
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Energy Generation Over Time',
+                    font: { size: 18 }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour',
+                        tooltipFormat: 'MMM d, HH:mm'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date/Time'
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Megawatts (MW)'
+                    }
+                }
+            }
+        }
+    });
 }
 
 /**
- * Simple color fallback if no color is defined in label.csv.
+ * Returns a default color if none is specified in label.csv.
  */
-function getColor(index) {
-  const colors = [
-    '#007bff', '#dc3545', '#28a745', '#ffc107', '#17a2b8',
-    '#6f42c1', '#e83e8c', '#fd7e14', '#20c997', '#343a40'
-  ];
-  return colors[index % colors.length];
+function getColor() {
+    const colors = ['#007bff', '#dc3545', '#28a745', '#ffc107', '#17a2b8', '#6f42c1', '#e83e8c', '#fd7e14'];
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 /**
- * Initialization sequence: fetch data, fetch labels, build UI, plot the first series by default.
+ * Initialization sequence.
  */
 async function init() {
-  await fetchCSVData();
-  await fetchLabels();
-  populateDropdown();
-  plotData(); // Plot the first series automatically
+    await fetchCSVData();
+    await fetchLabels();
+    populateDropdown();
 }
 
-// Kick off once DOM is ready
 document.addEventListener('DOMContentLoaded', init);
