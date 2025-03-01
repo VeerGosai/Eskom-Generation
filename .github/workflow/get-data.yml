@@ -1,0 +1,45 @@
+name: Get Eskom Energy Data
+
+on:
+  schedule:
+    - cron: '* * * * *'  # Adjust schedule as needed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  get-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install puppeteer fs
+
+      - name: Run get-data.js
+        run: node get-data.js
+
+      - name: Upload output.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: eskom-energy-data
+          path: output.json
+
+      - name: Configure Git
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Push output.json
+        run: |
+          git add output.json
+          git commit -m "Update Eskom energy data"
+          git push
