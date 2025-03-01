@@ -22,30 +22,15 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install puppeteer fs
+        run: npm install puppeteer fs path axios
 
       - name: Run get-data.js
         run: node get-data.js
 
-      - name: Upload output.json
-        uses: actions/upload-artifact@v4
-        with:
-          name: eskom-energy-data
-          path: output.json
-
-      - name: Configure Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Run sort.py
-        run: |
-          python sort.py
-
       - name: Upload output.csv
         uses: actions/upload-artifact@v4
         with:
-          name: eskom-energy-csv
+          name: eskom-energy-data
           path: output.csv
 
       - name: Configure Git

@@ -29,10 +29,13 @@
         // Load CSV data
         d3.csv("https://raw.githubusercontent.com/VeerGosai/Eskom-Generation/main/output.csv").then(function(data) {
             // Process the data
-            const times = data.map(row => row["Date And Time"]);
-            const nuclearGeneration = data.map(row => parseFloat(row["Nuclear_Generation"]));
-            const eskomOCGTGeneration = data.map(row => parseFloat(row["Eskom_OCGT_Generation"]));
-            const wind = data.map(row => parseFloat(row["Wind"]));
+            const times = data.map(row => {
+                const timestamp = parseInt(row["Date_Time_Hour_Beginning"]);
+                return new Date(timestamp); // Convert timestamp to Date object
+            });
+
+            const nuclearGeneration = data.map(row => parseFloat(row["Sum(Station_Build_Up.Nuclear_Generation)"]));
+            const eskomOCGTGeneration = data.map(row => parseFloat(row["Sum(Station_Build_Up.International_Imports)"]));
 
             // Create the trace for the plot
             const trace1 = {
@@ -53,22 +56,18 @@
                 line: {color: 'green'}
             };
 
-            const trace3 = {
-                x: times,
-                y: wind,
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Wind Generation',
-                line: {color: 'orange'}
-            };
 
             // Plotly data
-            const dataToPlot = [trace1, trace2, trace3];
+            const dataToPlot = [trace1, trace2];
 
             // Layout configuration
             const layout = {
                 title: 'Energy Generation Data',
-                xaxis: {title: 'Date and Time', tickangle: -45},
+                xaxis: {
+                    title: 'Date and Time',
+                    tickformat: "%Y-%m-%d %H:%M:%S", // Format the x-axis date
+                    tickangle: -45
+                },
                 yaxis: {title: 'Generation (MW)'},
                 height: 600
             };

@@ -1,57 +1,44 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const axios = require('axios');
+const path = require('path');
 
 (async () => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'] // Add these flags to disable sandboxing
-  });
-  const page = await browser.newPage();
-
-  // Store all POST responses for the specified URL
-  const requests = [];
-
-  page.on('response', async (response) => {
-    const url = response.url();
-    if (url.includes('https://wabi-south-africa-north-a-primary-api.analysis.windows.net/public/reports/querydata?synchronous=true')) {
-      // Make sure the response body is parsed as text
-      try {
-        const responseBody = await response.text(); // Use text() instead of json() for larger content
-        requests.push({
-          url: url,
-          status: response.status(),
-          size: response.headers()['content-length'],
-          body: responseBody,
+    const url = "https://www.eskom.co.za/dataportal/supply-side/station-build-up-for-the-last-7-days/";
+    
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+    
+    const csvLink = await page.evaluate(() => {
+        const element = document.querySelector("#post-275 > div > div > div > section.elementor-section.elementor-top-section.elementor-element.elementor-element-155c81a.elementor-section-boxed.elementor-section-height-default.elementor-section-height-default > div > div > div > div > div > div > div.elementor-icon-box-content > h3 > a");
+        return element ? element.href : null;
+    });
+    
+    await browser.close();
+    
+    if (!csvLink) {
+        console.error("CSV link not found!");
+        return;
+    }
+    
+    console.log("Downloading CSV from:", csvLink);
+    
+    try {
+        const response = await axios({
+            url: csvLink,
+            method: 'GET',
+            responseType: 'stream'
         });
-      } catch (err) {
-        console.log('Error loading response body:', err);
-      }
+        
+        const outputPath = path.join(__dirname, 'output.csv');
+        const writer = fs.createWriteStream(outputPath);
+        response.data.pipe(writer);
+        
+        writer.on('finish', () => console.log("CSV downloaded successfully as output.csv"));
+        writer.on('error', (err) => console.error("Error writing file:", err));
+        
+    } catch (error) {
+        console.error("Error downloading CSV:", error);
     }
-  });
-
-  // Open the page and wait for 60 seconds to allow at least 6 requests
-  await page.goto('https://www.eskom.co.za/dataportal/supply-side/station-build-up-for-yesterday/');
-  await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for 60 seconds
-
-  // Check if we have at least 3 POST requests
-  if (requests.length >= 3) {
-    // Find the request with the largest response body based on content-length
-    const largestRequest = requests.reduce((max, req) => {
-      if (parseInt(req.size) > parseInt(max.size)) {
-        return req;
-      }
-      return max;
-    }, { size: 0 });
-
-    if (largestRequest.body) {
-      // Save the largest response body to output.json
-      fs.writeFileSync('output.json', largestRequest.body);
-      console.log('Largest response saved to output.json');
-    }
-  } else {
-    console.log('Less than 6 requests found. Exiting...');
-  }
-
-  // Close the browser and stop the script
-  await browser.close();
 })();
