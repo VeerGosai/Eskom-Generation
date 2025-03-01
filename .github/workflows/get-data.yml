@@ -33,13 +33,28 @@ jobs:
           name: eskom-energy-data
           path: output.json
 
+      - name: Configure Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Run sort.py
+        run: |
+          python sort.py
+
+      - name: Upload output.csv
+        uses: actions/upload-artifact@v4
+        with:
+          name: eskom-energy-csv
+          path: output.csv
+
       - name: Configure Git
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Push output.json
+      - name: Push output.csv
         run: |
-          git add output.json
-          git commit -m "Update Eskom energy data"
+          git add output.csv
+          git commit -m "Update Eskom energy data CSV"
           git push
